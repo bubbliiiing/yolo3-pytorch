@@ -1,7 +1,6 @@
 #-------------------------------------#
 #       调用摄像头检测
 #-------------------------------------#
-from keras.layers import Input
 from yolo import YOLO
 from PIL import Image
 import numpy as np
