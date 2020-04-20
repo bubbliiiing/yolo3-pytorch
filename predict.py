@@ -1,7 +1,6 @@
 #-------------------------------------#
 #       对单张图片进行预测
 #-------------------------------------#
-from keras.layers import Input
 from yolo import YOLO
 from PIL import Image
 
