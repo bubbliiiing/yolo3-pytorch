@@ -101,10 +101,10 @@ class YOLO(object):
             batch_detections = non_max_suppression(output, self.config["yolo"]["classes"],
                                                     conf_thres=self.confidence,
                                                     nms_thres=0.3)
-        if batch_detections[0] == None:
+        try :
+            batch_detections = batch_detections[0].cpu().numpy()
+        except:
             return image
-            
-        batch_detections = batch_detections[0].cpu().numpy()
         top_index = batch_detections[:,4]*batch_detections[:,5] > self.confidence
         top_conf = batch_detections[top_index,4]*batch_detections[top_index,5]
         top_label = np.array(batch_detections[top_index,-1],np.int32)
