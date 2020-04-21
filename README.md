@@ -35,4 +35,5 @@ get_map文件克隆自https://github.com/Cartucho/mAP
 
 ### Reference
 https://github.com/qqwweee/keras-yolo3  
-https://github.com/eriklindernoren/PyTorch-YOLOv3  
+https://github.com/eriklindernoren/PyTorch-YOLOv3   
+https://github.com/BobLiu20/YOLOv3_PyTorch
