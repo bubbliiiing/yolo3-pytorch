@@ -44,11 +44,11 @@ class mAP_Yolo(YOLO):
                 output_list.append(self.yolo_decodes[i](outputs[i]))
             output = torch.cat(output_list, 1)
             batch_detections = non_max_suppression(output, Config["yolo"]["classes"],
-                                                    conf_thres=0.5,
+                                                    conf_thres=self.confidence,
                                                     nms_thres=0.3)
-        batch_detections = batch_detections[0].cpu().numpy()
-
-        if len(batch_detections)<=0:
+        try :
+            batch_detections = batch_detections[0].cpu().numpy()
+        except:
             return image
         top_index = batch_detections[:,4]*batch_detections[:,5] > self.confidence
         top_conf = batch_detections[top_index,4]*batch_detections[top_index,5]
