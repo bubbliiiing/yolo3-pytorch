@@ -237,7 +237,7 @@ class Generator(object):
         self.train_batches = len(train_lines)
         self.image_size = image_size
         
-    def get_random_data(self, annotation_line, input_shape, random=True, jitter=.1, hue=.1, sat=1.3, val=1.3, proc_img=True):
+    def get_random_data(self, annotation_line, input_shape, jitter=.1, hue=.1, sat=1.3, val=1.3):
         '''r实时数据增强的随机预处理'''
         line = annotation_line.split()
         image = Image.open(line[0])
