@@ -103,7 +103,7 @@ if __name__ == "__main__":
         lr = 1e-3
         Batch_size = 8
         Init_Epoch = 0
-        Freeze_Epoch = 2
+        Freeze_Epoch = 25
         
         optimizer = optim.Adam(net.parameters(),lr)
         lr_scheduler = optim.lr_scheduler.StepLR(optimizer,step_size=1,gamma=0.95)
@@ -124,21 +124,9 @@ if __name__ == "__main__":
         for epoch in range(Init_Epoch,Freeze_Epoch):
             fit_ont_epoch(net,yolo_losses,epoch,epoch_size,epoch_size_val,gen,gen_val,Freeze_Epoch)
             lr_scheduler.step()
-
-        # 然后再使用1e-4的学习率可以辅助收敛
-        lr = 1e-4
-        Init_Epoch = 2
-        Freeze_Epoch = 25
-        
-        optimizer = optim.Adam(net.parameters(),lr)
-        lr_scheduler = optim.lr_scheduler.StepLR(optimizer,step_size=1,gamma=0.95)
-
-        for epoch in range(Init_Epoch,Freeze_Epoch):
-            fit_ont_epoch(net,yolo_losses,epoch,epoch_size,epoch_size_val,gen,gen_val,Freeze_Epoch)
-            lr_scheduler.step()
             
     if True:
-        lr = 1e-5
+        lr = 1e-4
         Batch_size = 4
         Freeze_Epoch = 25
         Unfreeze_Epoch = 50
