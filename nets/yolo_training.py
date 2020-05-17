@@ -41,18 +41,26 @@ class YOLOLoss(nn.Module):
         self.lambda_cls = 1.0
 
     def forward(self, input, targets=None):
+        # input为bs,3*(5+num_classes),13,13
+        
         # 一共多少张图片
         bs = input.size(0)
         # 特征层的高
         in_h = input.size(2)
         # 特征层的宽
         in_w = input.size(3)
+
         # 计算步长
+        # 每一个特征点对应原来的图片上多少个像素点
+        # 如果特征层为13x13的话，一个特征点就对应原来的图片上的32个像素点
         stride_h = self.img_size[1] / in_h
         stride_w = self.img_size[0] / in_w
+
         # 把先验框的尺寸调整成特征层大小的形式
+        # 计算出先验框在特征层上对应的宽高
         scaled_anchors = [(a_w / stride_w, a_h / stride_h) for a_w, a_h in self.anchors]
-        # reshape
+        
+        # bs,3*(5+num_classes),13,13 -> bs,3,13,13,(5+num_classes)
         prediction = input.view(bs, int(self.num_anchors/3),
                                 self.bbox_attrs, in_h, in_w).permute(0, 1, 3, 4, 2).contiguous()
         
@@ -72,9 +80,9 @@ class YOLOLoss(nn.Module):
 
         noobj_mask = self.get_ignore(prediction, targets, scaled_anchors, in_w, in_h, noobj_mask)
 
-        box_loss_scale_x = (2-box_loss_scale_x).cuda()
-        box_loss_scale_y = (2-box_loss_scale_y).cuda()
-        box_loss_scale = box_loss_scale_x*box_loss_scale_y
+        box_loss_scale_x = (box_loss_scale_x).cuda()
+        box_loss_scale_y = (box_loss_scale_y).cuda()
+        box_loss_scale = 2 - box_loss_scale_x*box_loss_scale_y
         mask, noobj_mask = mask.cuda(), noobj_mask.cuda()
         tx, ty, tw, th = tx.cuda(), ty.cuda(), tw.cuda(), th.cuda()
         tconf, tcls = tconf.cuda(), tcls.cuda()
@@ -122,6 +130,7 @@ class YOLOLoss(nn.Module):
                 # 计算出在特征层上的点位
                 gx = target[b][t, 0] * in_w
                 gy = target[b][t, 1] * in_h
+                
                 gw = target[b][t, 2] * in_w
                 gh = target[b][t, 3] * in_h
 
@@ -174,54 +183,52 @@ class YOLOLoss(nn.Module):
         scaled_anchors = np.array(scaled_anchors)[anchor_index]
         # print(scaled_anchors)
         # 先验框的中心位置的调整参数
-        x_all = torch.sigmoid(prediction[..., 0])  
-        y_all = torch.sigmoid(prediction[..., 1])
+        x = torch.sigmoid(prediction[..., 0])  
+        y = torch.sigmoid(prediction[..., 1])
         # 先验框的宽高调整参数
-        w_all = prediction[..., 2]  # Width
-        h_all = prediction[..., 3]  # Height
+        w = prediction[..., 2]  # Width
+        h = prediction[..., 3]  # Height
+
+        FloatTensor = torch.cuda.FloatTensor if x.is_cuda else torch.FloatTensor
+        LongTensor = torch.cuda.LongTensor if x.is_cuda else torch.LongTensor
+
+        # 生成网格，先验框中心，网格左上角
+        grid_x = torch.linspace(0, in_w - 1, in_w).repeat(in_w, 1).repeat(
+            int(bs*self.num_anchors/3), 1, 1).view(x.shape).type(FloatTensor)
+        grid_y = torch.linspace(0, in_h - 1, in_h).repeat(in_h, 1).t().repeat(
+            int(bs*self.num_anchors/3), 1, 1).view(y.shape).type(FloatTensor)
+
+        # 生成先验框的宽高
+        anchor_w = FloatTensor(scaled_anchors).index_select(1, LongTensor([0]))
+        anchor_h = FloatTensor(scaled_anchors).index_select(1, LongTensor([1]))
+        
+        anchor_w = anchor_w.repeat(bs, 1).repeat(1, 1, in_h * in_w).view(w.shape)
+        anchor_h = anchor_h.repeat(bs, 1).repeat(1, 1, in_h * in_w).view(h.shape)
+        
+        # 计算调整后的先验框中心与宽高
+        pred_boxes = FloatTensor(prediction[..., :4].shape)
+        pred_boxes[..., 0] = x.data + grid_x
+        pred_boxes[..., 1] = y.data + grid_y
+        pred_boxes[..., 2] = torch.exp(w.data) * anchor_w
+        pred_boxes[..., 3] = torch.exp(h.data) * anchor_h
+
         for i in range(bs):
-            x = x_all[i]
-            y = y_all[i]
-            w = w_all[i]
-            h = h_all[i]
-
-            FloatTensor = torch.cuda.FloatTensor if x.is_cuda else torch.FloatTensor
-            LongTensor = torch.cuda.LongTensor if x.is_cuda else torch.LongTensor
-
-            # 生成网格，先验框中心，网格左上角
-            grid_x = torch.linspace(0, in_w - 1, in_w).repeat(in_w, 1).repeat(
-                int(self.num_anchors/3), 1, 1).view(x.shape).type(FloatTensor)
-            grid_y = torch.linspace(0, in_h - 1, in_h).repeat(in_h, 1).t().repeat(
-                int(self.num_anchors/3), 1, 1).view(y.shape).type(FloatTensor)
-
-            # 生成先验框的宽高
-            anchor_w = FloatTensor(scaled_anchors).index_select(1, LongTensor([0]))
-            anchor_h = FloatTensor(scaled_anchors).index_select(1, LongTensor([1]))
-            
-            anchor_w = anchor_w.repeat(1, 1, in_h * in_w).view(w.shape)
-            anchor_h = anchor_h.repeat(1, 1, in_h * in_w).view(h.shape)
-            
-            # 计算调整后的先验框中心与宽高
-            pred_boxes = torch.FloatTensor(prediction[0][..., :4].shape)
-            pred_boxes[..., 0] = x.data + grid_x
-            pred_boxes[..., 1] = y.data + grid_y
-            pred_boxes[..., 2] = torch.exp(w.data) * anchor_w
-            pred_boxes[..., 3] = torch.exp(h.data) * anchor_h
-
-            pred_boxes = pred_boxes.view(-1, 4)
+            pred_boxes_for_ignore = pred_boxes[i]
+            pred_boxes_for_ignore = pred_boxes_for_ignore.view(-1, 4)
 
             for t in range(target[i].shape[0]):
                 gx = target[i][t, 0] * in_w
                 gy = target[i][t, 1] * in_h
                 gw = target[i][t, 2] * in_w
                 gh = target[i][t, 3] * in_h
-                gt_box = torch.FloatTensor(np.array([gx, gy, gw, gh])).unsqueeze(0)
+                gt_box = torch.FloatTensor(np.array([gx, gy, gw, gh])).unsqueeze(0).type(FloatTensor)
 
-                anch_ious = bbox_iou(gt_box, pred_boxes, x1y1x2y2=False)
-                anch_ious = anch_ious.view(x.size())
+                anch_ious = bbox_iou(gt_box, pred_boxes_for_ignore, x1y1x2y2=False)
+                anch_ious = anch_ious.view(pred_boxes[i].size()[:3])
                 noobj_mask[i][anch_ious>self.ignore_threshold] = 0
                 # print(torch.max(anch_ious))
         return noobj_mask
+
 
 def rand(a=0, b=1):
     return np.random.rand()*(b-a) + a
