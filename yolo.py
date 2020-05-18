@@ -57,7 +57,7 @@ class YOLO(object):
         state_dict = torch.load(self.model_path)
         self.net.load_state_dict(state_dict)
         self.net = nn.DataParallel(self.net)
-        self.net = self.net.cuda()
+        self.net = self.net.cuda().eval()
 
 
         self.yolo_decodes = []
