@@ -79,7 +79,7 @@ if __name__ == "__main__":
 
     net = torch.nn.DataParallel(model)
     cudnn.benchmark = True
-    net = net.cuda()
+    net = net.cuda().train()
 
     # 建立loss函数
     yolo_losses = []
