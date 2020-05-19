@@ -62,7 +62,7 @@ class YOLO(object):
 
         self.yolo_decodes = []
         for i in range(3):
-            self.yolo_decodes.append(DecodeBox(self.config["yolo"]["anchors"][i], self.config["yolo"]["classes"], (self.config["img_w"], self.config["img_h"])))
+            self.yolo_decodes.append(DecodeBox(self.config["yolo"]["anchors"][i], self.config["yolo"]["classes"],  (self.model_image_size[1], self.model_image_size[0])))
 
 
         print('{} model, anchors, and classes loaded.'.format(self.model_path))
