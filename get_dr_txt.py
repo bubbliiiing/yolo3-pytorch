@@ -23,7 +23,7 @@ class mAP_Yolo(YOLO):
     #---------------------------------------------------#
     def detect_image(self,image_id,image):
         self.confidence = 0.05
-        f = open("./input/detection-results/"+image_id+".txt","a") 
+        f = open("./input/detection-results/"+image_id+".txt","w") 
         image_shape = np.array(np.shape(image)[0:2])
 
         crop_img = np.array(letterbox_image(image, (self.model_image_size[0],self.model_image_size[1])))
