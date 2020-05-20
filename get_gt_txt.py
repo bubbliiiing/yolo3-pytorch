@@ -16,7 +16,7 @@ if not os.path.exists("./input/ground-truth"):
     os.makedirs("./input/ground-truth")
 
 for image_id in image_ids:
-    with open("./input/ground-truth/"+image_id+".txt", "a") as new_f:
+    with open("./input/ground-truth/"+image_id+".txt", "w") as new_f:
         root = ET.parse("VOCdevkit/VOC2007/Annotations/"+image_id+".xml").getroot()
         for obj in root.findall('object'):
             obj_name = obj.find('name').text
