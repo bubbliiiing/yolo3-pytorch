@@ -35,7 +35,9 @@ class mAP_Yolo(YOLO):
         images.append(photo)
 
         images = np.asarray(images)
-        images = torch.from_numpy(images).cuda()
+        images = torch.from_numpy(images)
+        if self.cuda:
+            images = images.cuda()
         
         with torch.no_grad():
             outputs = self.net(images)
