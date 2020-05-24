@@ -14,15 +14,19 @@ from utils.config import Config
 from nets.yolo_training import YOLOLoss,Generator
 from nets.yolo3 import YoloBody
 
-def fit_ont_epoch(net,yolo_losses,epoch,epoch_size,epoch_size_val,gen,genval,Epoch):
+def fit_ont_epoch(net,yolo_losses,epoch,epoch_size,epoch_size_val,gen,genval,Epoch,cuda):
     total_loss = 0
     val_loss = 0
     for iteration in range(epoch_size):
         start_time = time.time()
         images, targets = next(gen)
         with torch.no_grad():
-            images = Variable(torch.from_numpy(images).cuda().type(torch.FloatTensor))
-            targets = [Variable(torch.from_numpy(ann).type(torch.FloatTensor)) for ann in targets]
+            if cuda:
+                images = Variable(torch.from_numpy(images).type(torch.FloatTensor)).cuda()
+                targets = [Variable(torch.from_numpy(ann).type(torch.FloatTensor)) for ann in targets]
+            else:
+                images = Variable(torch.from_numpy(images).type(torch.FloatTensor))
+                targets = [Variable(torch.from_numpy(ann).type(torch.FloatTensor)) for ann in targets]
 
         optimizer.zero_grad()
         outputs = net(images)
@@ -44,8 +48,12 @@ def fit_ont_epoch(net,yolo_losses,epoch,epoch_size,epoch_size_val,gen,genval,Epo
         images_val, targets_val = next(gen_val)
 
         with torch.no_grad():
-            images_val = Variable(torch.from_numpy(images_val).cuda().type(torch.FloatTensor))
-            targets_val = [Variable(torch.from_numpy(ann).type(torch.FloatTensor)) for ann in targets_val]
+            if cuda:
+                images_val = Variable(torch.from_numpy(images_val).type(torch.FloatTensor)).cuda()
+                targets_val = [Variable(torch.from_numpy(ann).type(torch.FloatTensor)) for ann in targets_val]
+            else:
+                images_val = Variable(torch.from_numpy(images_val).type(torch.FloatTensor))
+                targets_val = [Variable(torch.from_numpy(ann).type(torch.FloatTensor)) for ann in targets_val]
             optimizer.zero_grad()
             outputs = net(images_val)
             losses = []
@@ -66,6 +74,7 @@ if __name__ == "__main__":
     # 参数初始化
     annotation_path = '2007_train.txt'
     model = YoloBody(Config)
+    Cuda = True
 
     print('Loading weights into state dict...')
     model_dict = model.state_dict()
@@ -75,17 +84,18 @@ if __name__ == "__main__":
     model.load_state_dict(model_dict)
     print('Finished!')
 
-    net = model
+    net = model.train()
 
-    net = torch.nn.DataParallel(model)
-    cudnn.benchmark = True
-    net = net.cuda().train()
+    if Cuda:
+        net = torch.nn.DataParallel(model)
+        cudnn.benchmark = True
+        net = net.cuda()
 
     # 建立loss函数
     yolo_losses = []
     for i in range(3):
         yolo_losses.append(YOLOLoss(np.reshape(Config["yolo"]["anchors"],[-1,2]),
-                                    Config["yolo"]["classes"], (Config["img_w"], Config["img_h"])))
+                                    Config["yolo"]["classes"], (Config["img_w"], Config["img_h"]), Cuda))
 
     # 0.1用于验证，0.9用于训练
     val_split = 0.1
@@ -122,7 +132,7 @@ if __name__ == "__main__":
             param.requires_grad = False
 
         for epoch in range(Init_Epoch,Freeze_Epoch):
-            fit_ont_epoch(net,yolo_losses,epoch,epoch_size,epoch_size_val,gen,gen_val,Freeze_Epoch)
+            fit_ont_epoch(net,yolo_losses,epoch,epoch_size,epoch_size_val,gen,gen_val,Freeze_Epoch,Cuda)
             lr_scheduler.step()
             
     if True:
@@ -147,5 +157,5 @@ if __name__ == "__main__":
             param.requires_grad = True
 
         for epoch in range(Freeze_Epoch,Unfreeze_Epoch):
-            fit_ont_epoch(net,yolo_losses,epoch,epoch_size,epoch_size_val,gen,gen_val,Unfreeze_Epoch)
+            fit_ont_epoch(net,yolo_losses,epoch,epoch_size,epoch_size_val,gen,gen_val,Unfreeze_Epoch,Cuda)
             lr_scheduler.step()

@@ -20,6 +20,7 @@ class YOLO(object):
         "classes_path": 'model_data/coco_classes.txt',
         "model_image_size" : (416, 416, 3),
         "confidence": 0.5,
+        "cuda": True
     }
 
     @classmethod
@@ -50,15 +51,17 @@ class YOLO(object):
     #   获得所有的分类
     #---------------------------------------------------#
     def generate(self):
-        os.environ["CUDA_VISIBLE_DEVICES"] = '0'
         self.config["yolo"]["classes"] = len(self.class_names)
         self.net = YoloBody(self.config)
 
         state_dict = torch.load(self.model_path)
         self.net.load_state_dict(state_dict)
-        self.net = nn.DataParallel(self.net)
-        self.net = self.net.cuda().eval()
+        self.net = self.net.eval()
 
+        if self.cuda:
+            os.environ["CUDA_VISIBLE_DEVICES"] = '0'
+            self.net = nn.DataParallel(self.net)
+            self.net = self.net.cuda()
 
         self.yolo_decodes = []
         for i in range(3):
@@ -89,7 +92,9 @@ class YOLO(object):
         images.append(photo)
 
         images = np.asarray(images)
-        images = torch.from_numpy(images).cuda()
+        images = torch.from_numpy(images)
+        if self.cuda:
+            images = images.cuda()
         
         with torch.no_grad():
             outputs = self.net(images)

@@ -26,12 +26,13 @@ def BCELoss(pred,target):
     return output
 
 class YOLOLoss(nn.Module):
-    def __init__(self, anchors, num_classes, img_size):
+    def __init__(self, anchors, num_classes, img_size, cuda):
         super(YOLOLoss, self).__init__()
         self.anchors = anchors
         self.num_anchors = len(anchors)
         self.num_classes = num_classes
         self.bbox_attrs = 5 + num_classes
+        self.feature_length = [img_size[0]//32,img_size[0]//16,img_size[0]//8]
         self.img_size = img_size
 
         self.ignore_threshold = 0.5
@@ -39,6 +40,7 @@ class YOLOLoss(nn.Module):
         self.lambda_wh = 1.0
         self.lambda_conf = 1.0
         self.lambda_cls = 1.0
+        self.cuda = cuda
 
     def forward(self, input, targets=None):
         # input为bs,3*(5+num_classes),13,13
@@ -79,13 +81,14 @@ class YOLOLoss(nn.Module):
                                                                                             self.ignore_threshold)
 
         noobj_mask = self.get_ignore(prediction, targets, scaled_anchors, in_w, in_h, noobj_mask)
-
-        box_loss_scale_x = (box_loss_scale_x).cuda()
-        box_loss_scale_y = (box_loss_scale_y).cuda()
+        if self.cuda:
+            box_loss_scale_x = (box_loss_scale_x).cuda()
+            box_loss_scale_y = (box_loss_scale_y).cuda()
+            mask, noobj_mask = mask.cuda(), noobj_mask.cuda()
+            tx, ty, tw, th = tx.cuda(), ty.cuda(), tw.cuda(), th.cuda()
+            tconf, tcls = tconf.cuda(), tcls.cuda()
         box_loss_scale = 2 - box_loss_scale_x*box_loss_scale_y
-        mask, noobj_mask = mask.cuda(), noobj_mask.cuda()
-        tx, ty, tw, th = tx.cuda(), ty.cuda(), tw.cuda(), th.cuda()
-        tconf, tcls = tconf.cuda(), tcls.cuda()
+        
         #  losses.
         loss_x = torch.sum(BCELoss(x, tx) / bs * box_loss_scale * mask)
         loss_y = torch.sum(BCELoss(y, ty) / bs * box_loss_scale * mask)
@@ -110,8 +113,8 @@ class YOLOLoss(nn.Module):
         # 计算一共有多少张图片
         bs = len(target)
         # 获得先验框
-        anchor_index = [[0,1,2],[3,4,5],[6,7,8]][[13,26,52].index(in_w)]
-        subtract_index = [0,3,6][[13,26,52].index(in_w)]
+        anchor_index = [[0,1,2],[3,4,5],[6,7,8]][self.feature_length.index(in_w)]
+        subtract_index = [0,3,6][self.feature_length.index(in_w)]
         # 创建全是0或者全是1的阵列
         mask = torch.zeros(bs, int(self.num_anchors/3), in_h, in_w, requires_grad=False)
         noobj_mask = torch.ones(bs, int(self.num_anchors/3), in_h, in_w, requires_grad=False)
@@ -179,7 +182,7 @@ class YOLOLoss(nn.Module):
 
     def get_ignore(self,prediction,target,scaled_anchors,in_w, in_h,noobj_mask):
         bs = len(target)
-        anchor_index = [[0,1,2],[3,4,5],[6,7,8]][[13,26,52].index(in_w)]
+        anchor_index = [[0,1,2],[3,4,5],[6,7,8]][self.feature_length.index(in_w)]
         scaled_anchors = np.array(scaled_anchors)[anchor_index]
         # print(scaled_anchors)
         # 先验框的中心位置的调整参数
