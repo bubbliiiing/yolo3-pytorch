@@ -43,7 +43,7 @@ class mAP_Yolo(YOLO):
             for i in range(3):
                 output_list.append(self.yolo_decodes[i](outputs[i]))
             output = torch.cat(output_list, 1)
-            batch_detections = non_max_suppression(output, Config["yolo"]["classes"],
+            batch_detections = non_max_suppression(output, self.config["yolo"]["classes"],
                                                     conf_thres=self.confidence,
                                                     nms_thres=0.3)
         try :
