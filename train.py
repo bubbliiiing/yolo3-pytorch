@@ -17,9 +17,11 @@ from nets.yolo3 import YoloBody
 def fit_ont_epoch(net,yolo_losses,epoch,epoch_size,epoch_size_val,gen,genval,Epoch,cuda):
     total_loss = 0
     val_loss = 0
-    for iteration in range(epoch_size):
+    for iteration, batch in enumerate(gen):
+        if iteration >= epoch_size:
+            break
         start_time = time.time()
-        images, targets = next(gen)
+        images, targets = batch[0], batch[1]
         with torch.no_grad():
             if cuda:
                 images = Variable(torch.from_numpy(images).type(torch.FloatTensor)).cuda()
@@ -27,7 +29,6 @@ def fit_ont_epoch(net,yolo_losses,epoch,epoch_size,epoch_size_val,gen,genval,Epo
             else:
                 images = Variable(torch.from_numpy(images).type(torch.FloatTensor))
                 targets = [Variable(torch.from_numpy(ann).type(torch.FloatTensor)) for ann in targets]
-
         optimizer.zero_grad()
         outputs = net(images)
         losses = []
@@ -44,8 +45,10 @@ def fit_ont_epoch(net,yolo_losses,epoch,epoch_size,epoch_size_val,gen,genval,Epo
         print('iter:' + str(iteration) + '/' + str(epoch_size) + ' || Total Loss: %.4f || %.4fs/step' % (total_loss/(iteration+1),waste_time))
 
     print('Start Validation')
-    for iteration in range(epoch_size_val):
-        images_val, targets_val = next(gen_val)
+    for iteration, batch in enumerate(genval):
+        if iteration >= epoch_size_val:
+            break
+        images_val, targets_val = batch[0], batch[1]
 
         with torch.no_grad():
             if cuda:
@@ -68,7 +71,6 @@ def fit_ont_epoch(net,yolo_losses,epoch,epoch_size,epoch_size_val,gen,genval,Epo
 
     print('Saving state, iter:', str(epoch+1))
     torch.save(model.state_dict(), 'logs/Epoch%d-Total_Loss%.4f-Val_Loss%.4f.pth'%((epoch+1),total_loss/(epoch_size+1),val_loss/(epoch_size_val+1)))
-
 
 if __name__ == "__main__":
     # 参数初始化
