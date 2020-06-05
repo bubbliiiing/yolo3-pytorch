@@ -57,7 +57,7 @@ class YOLO(object):
         # 加快模型训练的效率
         print('Loading weights into state dict...')
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        state_dict = torch.load(self.model_path, map_location=device
+        state_dict = torch.load(self.model_path, map_location=device)
         self.net.load_state_dict(state_dict)
         self.net = self.net.eval()
 
