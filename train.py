@@ -11,16 +11,18 @@ import torch.optim as optim
 import torch.nn.functional as F
 import torch.backends.cudnn as cudnn
 from utils.config import Config
+from torch.utils.data import DataLoader
+from utils.dataloader import yolo_dataset_collate, YoloDataset
 from nets.yolo_training import YOLOLoss,Generator
 from nets.yolo3 import YoloBody
 
 def fit_ont_epoch(net,yolo_losses,epoch,epoch_size,epoch_size_val,gen,genval,Epoch,cuda):
     total_loss = 0
     val_loss = 0
+    start_time = time.time()
     for iteration, batch in enumerate(gen):
         if iteration >= epoch_size:
             break
-        start_time = time.time()
         images, targets = batch[0], batch[1]
         with torch.no_grad():
             if cuda:
@@ -43,6 +45,7 @@ def fit_ont_epoch(net,yolo_losses,epoch,epoch_size,epoch_size_val,gen,genval,Epo
         waste_time = time.time() - start_time
         print('\nEpoch:'+ str(epoch+1) + '/' + str(Epoch))
         print('iter:' + str(iteration) + '/' + str(epoch_size) + ' || Total Loss: %.4f || %.4fs/step' % (total_loss/(iteration+1),waste_time))
+        start_time = time.time()
 
     print('Start Validation')
     for iteration, batch in enumerate(genval):
@@ -77,11 +80,15 @@ if __name__ == "__main__":
     annotation_path = '2007_train.txt'
     model = YoloBody(Config)
     Cuda = True
+    #-------------------------------#
+    #   Dataloder的使用
+    #-------------------------------#
+    Use_Data_Loader = True
 
     print('Loading weights into state dict...')
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model_dict = model.state_dict()
-    pretrained_dict = torch.load("model_data/yolo_weights.pth", map_location=device)
+    pretrained_dict = torch.load("model_data/yolo_voc_weights.pth", map_location=device)
     pretrained_dict = {k: v for k, v in pretrained_dict.items() if np.shape(model_dict[k]) ==  np.shape(v)}
     model_dict.update(pretrained_dict)
     model.load_state_dict(model_dict)
@@ -121,10 +128,18 @@ if __name__ == "__main__":
         optimizer = optim.Adam(net.parameters(),lr)
         lr_scheduler = optim.lr_scheduler.StepLR(optimizer,step_size=1,gamma=0.95)
 
-        gen = Generator(Batch_size, lines[:num_train],
-                        (Config["img_h"], Config["img_w"])).generate()
-        gen_val = Generator(Batch_size, lines[num_train:],
-                        (Config["img_h"], Config["img_w"])).generate()
+        if Use_Data_Loader:
+            train_dataset = YoloDataset(lines[:num_train], (Config["img_h"], Config["img_w"]))
+            val_dataset = YoloDataset(lines[num_train:], (Config["img_h"], Config["img_w"]))
+            gen = DataLoader(train_dataset, batch_size=Batch_size, num_workers=8, pin_memory=True,
+                                    drop_last=True, collate_fn=yolo_dataset_collate)
+            gen_val = DataLoader(val_dataset, batch_size=Batch_size, num_workers=8,pin_memory=True, 
+                                    drop_last=True, collate_fn=yolo_dataset_collate)
+        else:
+            gen = Generator(Batch_size, lines[:num_train],
+                             (Config["img_h"], Config["img_w"])).generate()
+            gen_val = Generator(Batch_size, lines[num_train:],
+                             (Config["img_h"], Config["img_w"])).generate()
                         
         epoch_size = num_train//Batch_size
         epoch_size_val = num_val//Batch_size
@@ -146,10 +161,18 @@ if __name__ == "__main__":
 
         optimizer = optim.Adam(net.parameters(),lr)
         lr_scheduler = optim.lr_scheduler.StepLR(optimizer,step_size=1,gamma=0.95)
-        gen = Generator(Batch_size, lines[:num_train],
-                        (Config["img_h"], Config["img_w"])).generate()
-        gen_val = Generator(Batch_size, lines[num_train:],
-                        (Config["img_h"], Config["img_w"])).generate()
+        if Use_Data_Loader:
+            train_dataset = YoloDataset(lines[:num_train], (Config["img_h"], Config["img_w"]))
+            val_dataset = YoloDataset(lines[num_train:], (Config["img_h"], Config["img_w"]))
+            gen = DataLoader(train_dataset, batch_size=Batch_size, num_workers=8, pin_memory=True,
+                                    drop_last=True, collate_fn=yolo_dataset_collate)
+            gen_val = DataLoader(val_dataset, batch_size=Batch_size, num_workers=8,pin_memory=True, 
+                                    drop_last=True, collate_fn=yolo_dataset_collate)
+        else:
+            gen = Generator(Batch_size, lines[:num_train],
+                             (Config["img_h"], Config["img_w"])).generate()
+            gen_val = Generator(Batch_size, lines[num_train:],
+                             (Config["img_h"], Config["img_w"])).generate()
                         
         epoch_size = num_train//Batch_size
         epoch_size_val = num_val//Batch_size
