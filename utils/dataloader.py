@@ -13,14 +13,12 @@ from nets.yolo_training import Generator
 
 
 class YoloDataset(Dataset):
-    def __init__(self, train_lines, image_size, mosaic=True):
+    def __init__(self, train_lines, image_size):
         super(YoloDataset, self).__init__()
 
         self.train_lines = train_lines
         self.train_batches = len(train_lines)
         self.image_size = image_size
-        self.mosaic = mosaic
-        self.flag = True
 
     def __len__(self):
         return self.train_batches
