@@ -88,7 +88,7 @@ if __name__ == "__main__":
     print('Loading weights into state dict...')
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model_dict = model.state_dict()
-    pretrained_dict = torch.load("model_data/yolo_voc_weights.pth", map_location=device)
+    pretrained_dict = torch.load("model_data/yolo_weights.pth", map_location=device)
     pretrained_dict = {k: v for k, v in pretrained_dict.items() if np.shape(model_dict[k]) ==  np.shape(v)}
     model_dict.update(pretrained_dict)
     model.load_state_dict(model_dict)
