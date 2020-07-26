@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 from torch.utils.data.dataset import Dataset
 from matplotlib.colors import rgb_to_hsv, hsv_to_rgb
 from nets.yolo_training import Generator
-
+import cv2
 
 class YoloDataset(Dataset):
     def __init__(self, train_lines, image_size):
@@ -62,15 +62,16 @@ class YoloDataset(Dataset):
         hue = self.rand(-hue, hue)
         sat = self.rand(1, sat) if self.rand() < .5 else 1 / self.rand(1, sat)
         val = self.rand(1, val) if self.rand() < .5 else 1 / self.rand(1, val)
-        x = rgb_to_hsv(np.array(image) / 255.)
-        x[..., 0] += hue
-        x[..., 0][x[..., 0] > 1] -= 1
-        x[..., 0][x[..., 0] < 0] += 1
+        x = cv2.cvtColor(np.array(image,np.float32)/255, cv2.COLOR_RGB2HSV)
+        x[..., 0] += hue*360
+        x[..., 0][x[..., 0]>1] -= 1
+        x[..., 0][x[..., 0]<0] += 1
         x[..., 1] *= sat
         x[..., 2] *= val
-        x[x > 1] = 1
-        x[x < 0] = 0
-        image_data = hsv_to_rgb(x) * 255  # numpy array, 0 to 1
+        x[x[:,:, 0]>360, 0] = 360
+        x[:, :, 1:][x[:, :, 1:]>1] = 1
+        x[x<0] = 0
+        image_data = cv2.cvtColor(x, cv2.COLOR_HSV2RGB)*255
 
         # 调整目标框坐标
         box_data = np.zeros((len(box), 5))
