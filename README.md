@@ -67,7 +67,7 @@ cat
 dog
 ...
 ```
-8、**修改utils/config.py里面的classes，使其为要检测的类的个数**。
+8、**修改utils/config.py里面的classes，使其为要检测的类的个数**。   
 9、运行train.py即可开始训练。
 
 ### mAP目标检测精度计算更新
