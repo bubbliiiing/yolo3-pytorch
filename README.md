@@ -57,10 +57,7 @@ d、利用video.py可进行摄像头检测。
 classes = ["aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat", "chair", "cow", "diningtable", "dog", "horse", "motorbike", "person", "pottedplant", "sheep", "sofa", "train", "tvmonitor"]
 ```
 6、此时会生成对应的2007_train.txt，每一行对应其**图片位置**及其**真实框的位置**。  
-7、**在训练前需要务必在model_data下新建一个txt文档，文档中输入需要分的类，在train.py中将classes_path指向该文件**，示例如下：   
-```python
-classes_path = 'model_data/new_classes.txt'    
-```
+7、**在训练前需要务必在model_data下新建一个txt文档，文档中输入需要分的类**，示例如下：   
 model_data/new_classes.txt文件内容为：   
 ```python
 cat
