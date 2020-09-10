@@ -152,7 +152,7 @@ if __name__ == "__main__":
         lr = 1e-3
         Batch_size = 8
         Init_Epoch = 0
-        Freeze_Epoch = 25
+        Freeze_Epoch = 50
         
         optimizer = optim.Adam(net.parameters(),lr)
         lr_scheduler = optim.lr_scheduler.StepLR(optimizer,step_size=1,gamma=0.95)
@@ -185,8 +185,8 @@ if __name__ == "__main__":
     if True:
         lr = 1e-4
         Batch_size = 4
-        Freeze_Epoch = 25
-        Unfreeze_Epoch = 50
+        Freeze_Epoch = 50
+        Unfreeze_Epoch = 100
 
         optimizer = optim.Adam(net.parameters(),lr)
         lr_scheduler = optim.lr_scheduler.StepLR(optimizer,step_size=1,gamma=0.95)
