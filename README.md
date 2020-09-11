@@ -12,7 +12,7 @@
 ### 性能情况
 | 训练数据集 | 权值文件名称 | 测试数据集 | 输入图片大小 | mAP 0.5:0.95 | mAP 0.5 |
 | :-----: | :-----: | :------: | :------: | :------: | :-----: |
-| COCO-Train2017 | [yolo_weights.pth](https://github.com/bubbliiiing/yolo3-pytorch/releases/download/v1.0/yolo_weights.pth) | COCO-Val2017 | 416x416 | 36.9 | 65.5
+| COCO-Train2017 | [yolo_weights.pth](https://github.com/bubbliiiing/yolo3-pytorch/releases/download/v1.0/yolo_weights.pth) | COCO-Val2017 | 416x416 | 38.0 | 67.2
 
 ### 所需环境
 torch == 1.2.0
