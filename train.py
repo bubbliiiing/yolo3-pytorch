@@ -56,7 +56,7 @@ def fit_ont_epoch(net,yolo_losses,epoch,epoch_size,epoch_size_val,gen,genval,Epo
             pbar.update(1)
 
             start_time = time.time()
-
+    net.eval()
     print('Start Validation')
     with tqdm(total=epoch_size_val, desc=f'Epoch {epoch + 1}/{Epoch}',postfix=dict,mininterval=0.3) as pbar:
         for iteration, batch in enumerate(genval):
@@ -81,7 +81,7 @@ def fit_ont_epoch(net,yolo_losses,epoch,epoch_size,epoch_size_val,gen,genval,Epo
                 val_loss += loss
             pbar.set_postfix(**{'total_loss': val_loss.item() / (iteration + 1)})
             pbar.update(1)
-            
+    net.train()
     print('Finish Validation')
     print('Epoch:'+ str(epoch+1) + '/' + str(Epoch))
     print('Total Loss: %.4f || Val Loss: %.4f ' % (total_loss/(epoch_size+1),val_loss/(epoch_size_val+1)))
@@ -160,9 +160,9 @@ if __name__ == "__main__":
         if Use_Data_Loader:
             train_dataset = YoloDataset(lines[:num_train], (Config["img_h"], Config["img_w"]))
             val_dataset = YoloDataset(lines[num_train:], (Config["img_h"], Config["img_w"]))
-            gen = DataLoader(train_dataset, batch_size=Batch_size, num_workers=4, pin_memory=True,
+            gen = DataLoader(train_dataset, shuffle=True, batch_size=Batch_size, num_workers=4, pin_memory=True,
                                     drop_last=True, collate_fn=yolo_dataset_collate)
-            gen_val = DataLoader(val_dataset, batch_size=Batch_size, num_workers=4,pin_memory=True, 
+            gen_val = DataLoader(val_dataset, shuffle=True, batch_size=Batch_size, num_workers=4,pin_memory=True, 
                                     drop_last=True, collate_fn=yolo_dataset_collate)
         else:
             gen = Generator(Batch_size, lines[:num_train],
@@ -193,9 +193,9 @@ if __name__ == "__main__":
         if Use_Data_Loader:
             train_dataset = YoloDataset(lines[:num_train], (Config["img_h"], Config["img_w"]))
             val_dataset = YoloDataset(lines[num_train:], (Config["img_h"], Config["img_w"]))
-            gen = DataLoader(train_dataset, batch_size=Batch_size, num_workers=4, pin_memory=True,
+            gen = DataLoader(train_dataset, shuffle=True, batch_size=Batch_size, num_workers=4, pin_memory=True,
                                     drop_last=True, collate_fn=yolo_dataset_collate)
-            gen_val = DataLoader(val_dataset, batch_size=Batch_size, num_workers=4,pin_memory=True, 
+            gen_val = DataLoader(val_dataset, shuffle=True, batch_size=Batch_size, num_workers=4,pin_memory=True, 
                                     drop_last=True, collate_fn=yolo_dataset_collate)
         else:
             gen = Generator(Batch_size, lines[:num_train],
