@@ -20,12 +20,12 @@ from utils.utils import non_max_suppression, bbox_iou, DecodeBox,letterbox_image
 #--------------------------------------------#
 class YOLO(object):
     _defaults = {
-        "model_path": 'model_data/yolo_weights.pth',
-        "classes_path": 'model_data/coco_classes.txt',
-        "model_image_size" : (416, 416, 3),
-        "confidence": 0.5,
-        "iou" : 0.3,
-        "cuda": True
+        "model_path"        : 'model_data/yolo_weights.pth',
+        "classes_path"      : 'model_data/coco_classes.txt',
+        "model_image_size"  : (416, 416, 3),
+        "confidence"        : 0.5,
+        "iou"               : 0.3,
+        "cuda"              : True
     }
 
     @classmethod
