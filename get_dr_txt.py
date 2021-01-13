@@ -1,22 +1,26 @@
-#-------------------------------------#
-#       mAP所需文件计算代码
-#       具体教程请查看Bilibili
-#       Bubbliiiing
-#-------------------------------------#
-import cv2
-import numpy as np
+#----------------------------------------------------#
+#   获取测试集的detection-result和images-optional
+#   具体视频教程可查看
+#   https://www.bilibili.com/video/BV1zE411u7Vw
+#----------------------------------------------------#
 import colorsys
 import os
+
+import cv2
+import numpy as np
 import torch
-import torch.nn as nn
 import torch.backends.cudnn as cudnn
+import torch.nn as nn
+from PIL import Image, ImageDraw, ImageFont
 from torch.autograd import Variable
-from yolo import YOLO
-from nets.yolo3 import YoloBody
-from PIL import Image,ImageFont, ImageDraw
-from utils.config import Config
-from utils.utils import non_max_suppression, bbox_iou, DecodeBox,letterbox_image,yolo_correct_boxes
 from tqdm import tqdm
+
+from nets.yolo3 import YoloBody
+from utils.config import Config
+from utils.utils import (DecodeBox, bbox_iou, letterbox_image,
+                         non_max_suppression, yolo_correct_boxes)
+from yolo import YOLO
+
 
 class mAP_Yolo(YOLO):
     #---------------------------------------------------#
@@ -28,40 +32,61 @@ class mAP_Yolo(YOLO):
         f = open("./input/detection-results/"+image_id+".txt","w") 
         image_shape = np.array(np.shape(image)[0:2])
 
+        #---------------------------------------------------------#
+        #   给图像增加灰条，实现不失真的resize
+        #---------------------------------------------------------#
         crop_img = np.array(letterbox_image(image, (self.model_image_size[1],self.model_image_size[0])))
-        photo = np.array(crop_img,dtype = np.float32)
-        photo /= 255.0
+        photo = np.array(crop_img,dtype = np.float32) / 255.0
         photo = np.transpose(photo, (2, 0, 1))
-        photo = photo.astype(np.float32)
-        images = []
-        images.append(photo)
+        #---------------------------------------------------------#
+        #   添加上batch_size维度
+        #---------------------------------------------------------#
+        images = [photo]
 
-        images = np.asarray(images)
-        images = torch.from_numpy(images)
-        if self.cuda:
-            images = images.cuda()
-        
         with torch.no_grad():
+            images = torch.from_numpy(np.asarray(images))
+            if self.cuda:
+                images = images.cuda()
+
+            #---------------------------------------------------------#
+            #   将图像输入网络当中进行预测！
+            #---------------------------------------------------------#
             outputs = self.net(images)
             output_list = []
             for i in range(3):
                 output_list.append(self.yolo_decodes[i](outputs[i]))
+                
+            #---------------------------------------------------------#
+            #   将预测框进行堆叠，然后进行非极大抑制
+            #---------------------------------------------------------#
             output = torch.cat(output_list, 1)
             batch_detections = non_max_suppression(output, self.config["yolo"]["classes"],
                                                     conf_thres=self.confidence,
                                                     nms_thres=self.iou)
-        try :
-            batch_detections = batch_detections[0].cpu().numpy()
-        except:
-            return image
-        top_index = batch_detections[:,4]*batch_detections[:,5] > self.confidence
-        top_conf = batch_detections[top_index,4]*batch_detections[top_index,5]
-        top_label = np.array(batch_detections[top_index,-1],np.int32)
-        top_bboxes = np.array(batch_detections[top_index,:4])
-        top_xmin, top_ymin, top_xmax, top_ymax = np.expand_dims(top_bboxes[:,0],-1),np.expand_dims(top_bboxes[:,1],-1),np.expand_dims(top_bboxes[:,2],-1),np.expand_dims(top_bboxes[:,3],-1)
+                                                    
+            #---------------------------------------------------------#
+            #   如果没有检测出物体，返回原图
+            #---------------------------------------------------------#
+            try :
+                batch_detections = batch_detections[0].cpu().numpy()
+            except:
+                return image
 
-        # 去掉灰条
-        boxes = yolo_correct_boxes(top_ymin,top_xmin,top_ymax,top_xmax,np.array([self.model_image_size[0],self.model_image_size[1]]),image_shape)
+            #---------------------------------------------------------#
+            #   对预测框进行得分筛选
+            #---------------------------------------------------------#
+            top_index = batch_detections[:,4] * batch_detections[:,5] > self.confidence
+            top_conf = batch_detections[top_index,4]*batch_detections[top_index,5]
+            top_label = np.array(batch_detections[top_index,-1],np.int32)
+            top_bboxes = np.array(batch_detections[top_index,:4])
+            top_xmin, top_ymin, top_xmax, top_ymax = np.expand_dims(top_bboxes[:,0],-1),np.expand_dims(top_bboxes[:,1],-1),np.expand_dims(top_bboxes[:,2],-1),np.expand_dims(top_bboxes[:,3],-1)
+
+            #-----------------------------------------------------------------#
+            #   在图像传入网络预测前会进行letterbox_image给图像周围添加灰条
+            #   因此生成的top_bboxes是相对于有灰条的图像的
+            #   我们需要对其进行修改，去除灰条的部分。
+            #-----------------------------------------------------------------#
+            boxes = yolo_correct_boxes(top_ymin,top_xmin,top_ymax,top_xmax,np.array([self.model_image_size[0],self.model_image_size[1]]),image_shape)
 
         for i, c in enumerate(top_label):
             predicted_class = self.class_names[c]

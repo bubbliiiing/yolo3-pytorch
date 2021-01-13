@@ -13,12 +13,13 @@ from nets.yolo_training import Generator
 import cv2
 
 class YoloDataset(Dataset):
-    def __init__(self, train_lines, image_size):
+    def __init__(self, train_lines, image_size, is_train):
         super(YoloDataset, self).__init__()
 
         self.train_lines = train_lines
         self.train_batches = len(train_lines)
         self.image_size = image_size
+        self.is_train = is_train
 
     def __len__(self):
         return self.train_batches
@@ -26,7 +27,7 @@ class YoloDataset(Dataset):
     def rand(self, a=0, b=1):
         return np.random.rand() * (b - a) + a
 
-    def get_random_data(self, annotation_line, input_shape, jitter=.3, hue=.1, sat=1.5, val=1.5):
+    def get_random_data(self, annotation_line, input_shape, jitter=.3, hue=.1, sat=1.5, val=1.5, random=True):
         """实时数据增强的随机预处理"""
         line = annotation_line.split()
         image = Image.open(line[0])
@@ -34,6 +35,35 @@ class YoloDataset(Dataset):
         h, w = input_shape
         box = np.array([np.array(list(map(int, box.split(',')))) for box in line[1:]])
 
+        if not random:
+            scale = min(w/iw, h/ih)
+            nw = int(iw*scale)
+            nh = int(ih*scale)
+            dx = (w-nw)//2
+            dy = (h-nh)//2
+
+            image = image.resize((nw,nh), Image.BICUBIC)
+            new_image = Image.new('RGB', (w,h), (128,128,128))
+            new_image.paste(image, (dx, dy))
+            image_data = np.array(new_image, np.float32)
+
+            # 调整目标框坐标
+            box_data = np.zeros((len(box), 5))
+            if len(box) > 0:
+                np.random.shuffle(box)
+                box[:, [0, 2]] = box[:, [0, 2]] * nw / iw + dx
+                box[:, [1, 3]] = box[:, [1, 3]] * nh / ih + dy
+                box[:, 0:2][box[:, 0:2] < 0] = 0
+                box[:, 2][box[:, 2] > w] = w
+                box[:, 3][box[:, 3] > h] = h
+                box_w = box[:, 2] - box[:, 0]
+                box_h = box[:, 3] - box[:, 1]
+                box = box[np.logical_and(box_w > 1, box_h > 1)]  # 保留有效框
+                box_data = np.zeros((len(box), 5))
+                box_data[:len(box)] = box
+
+            return image_data, box_data
+            
         # 调整图片大小
         new_ar = w / h * self.rand(1 - jitter, 1 + jitter) / self.rand(1 - jitter, 1 + jitter)
         scale = self.rand(.25, 2)
@@ -48,8 +78,7 @@ class YoloDataset(Dataset):
         # 放置图片
         dx = int(self.rand(0, w - nw))
         dy = int(self.rand(0, h - nh))
-        new_image = Image.new('RGB', (w, h),
-                              (np.random.randint(0, 255), np.random.randint(0, 255), np.random.randint(0, 255)))
+        new_image = Image.new('RGB', (w, h), (128, 128, 128))
         new_image.paste(image, (dx, dy))
         image = new_image
 
@@ -89,19 +118,18 @@ class YoloDataset(Dataset):
             box = box[np.logical_and(box_w > 1, box_h > 1)]  # 保留有效框
             box_data = np.zeros((len(box), 5))
             box_data[:len(box)] = box
-        if len(box) == 0:
-            return image_data, []
-
-        if (box_data[:, :4] > 0).any():
-            return image_data, box_data
-        else:
-            return image_data, []
+            
+        return image_data, box_data
 
     def __getitem__(self, index):
         lines = self.train_lines
         n = self.train_batches
         index = index % n
-        img, y = self.get_random_data(lines[index], self.image_size[0:2])
+        if self.is_train:
+            img, y = self.get_random_data(lines[index], self.image_size[0:2])
+        else:
+            img, y = self.get_random_data(lines[index], self.image_size[0:2], False)
+
         if len(y) != 0:
             # 从坐标转换成0~1的百分比
             boxes = np.array(y[:, :4], dtype=np.float32)
