@@ -1,11 +1,11 @@
-
 #----------------------------------------------------------------------#
 #   验证集的划分在train.py代码里面进行
 #   test.txt和val.txt里面没有内容是正常的。训练不会使用到。
 #----------------------------------------------------------------------#
 import os
 import random 
- 
+random.seed(0)
+
 xmlfilepath=r'./VOCdevkit/VOC2007/Annotations'
 saveBasePath=r"./VOCdevkit/VOC2007/ImageSets/Main/"
  
