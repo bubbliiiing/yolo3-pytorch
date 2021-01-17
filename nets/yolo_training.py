@@ -515,7 +515,7 @@ class Generator(object):
                 if train:
                     img,y=self.get_random_data(annotation_line, self.image_size[0:2])
                 else:
-                    img,y=self.get_random_data(annotation_line, self.image_size[0:2], False)
+                    img,y=self.get_random_data(annotation_line, self.image_size[0:2], random=False)
 
                 if len(y)!=0:
                     boxes = np.array(y[:,:4],dtype=np.float32)
