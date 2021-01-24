@@ -191,7 +191,7 @@ if __name__ == "__main__":
         Freeze_Epoch = 50
         
         optimizer = optim.Adam(net.parameters(),lr)
-        lr_scheduler = optim.lr_scheduler.StepLR(optimizer,step_size=1,gamma=0.95)
+        lr_scheduler = optim.lr_scheduler.StepLR(optimizer,step_size=1,gamma=0.92)
 
         if Use_Data_Loader:
             train_dataset = YoloDataset(lines[:num_train], (Config["img_h"], Config["img_w"]), True)
@@ -225,7 +225,7 @@ if __name__ == "__main__":
         Unfreeze_Epoch = 100
 
         optimizer = optim.Adam(net.parameters(),lr)
-        lr_scheduler = optim.lr_scheduler.StepLR(optimizer,step_size=1,gamma=0.95)
+        lr_scheduler = optim.lr_scheduler.StepLR(optimizer,step_size=1,gamma=0.92)
         
         if Use_Data_Loader:
             train_dataset = YoloDataset(lines[:num_train], (Config["img_h"], Config["img_w"]), True)
