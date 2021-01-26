@@ -60,7 +60,7 @@ def fit_ont_epoch(net,yolo_losses,epoch,epoch_size,epoch_size_val,gen,genval,Epo
                 losses.append(loss_item)
                 num_pos_all += num_pos
 
-            loss = sum(losses) / num_pos
+            loss = sum(losses) / num_pos_all
             #----------------------#
             #   反向传播
             #----------------------#
@@ -96,7 +96,7 @@ def fit_ont_epoch(net,yolo_losses,epoch,epoch_size,epoch_size_val,gen,genval,Epo
                     loss_item, num_pos = yolo_losses[i](outputs[i], targets_val)
                     losses.append(loss_item)
                     num_pos_all += num_pos
-                loss = sum(losses) / num_pos
+                loss = sum(losses) / num_pos_all
                 val_loss += loss.item()
             pbar.set_postfix(**{'total_loss': val_loss / (iteration + 1)})
             pbar.update(1)
