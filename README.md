@@ -1,6 +1,9 @@
 ## YOLOV3：You Only Look Once目标检测模型在Pytorch当中的实现
 ---
 
+**2021年2月8日更新：**   
+**加入letterbox_image的选项，关闭letterbox_image后网络的map一般可以得到提升。**
+
 ## 目录
 1. [性能情况 Performance](#性能情况)
 2. [所需环境 Environment](#所需环境)
