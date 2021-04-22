@@ -14,8 +14,8 @@ import os
 import random 
 random.seed(0)
 
-xmlfilepath=r'./VOCdevkit/VOC2007/Annotations'
-saveBasePath=r"./VOCdevkit/VOC2007/ImageSets/Main/"
+xmlfilepath=r'/content/yolo3-pytorch/VOCdevkit/VOC2007/Annotations'
+saveBasePath=r"/content/yolo3-pytorch/VOCdevkit/VOC2007/ImageSets/Main/"
  
 #----------------------------------------------------------------------#
 #   想要增加测试集修改trainval_percent
