@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from nets.yolo3 import YoloBody
-from nets.yolo_training import YOLOLoss, LossHistory
+from nets.yolo_training import YOLOLoss, LossHistory, weights_init
 from utils.dataloader import YoloDataset, yolo_dataset_collate
 
 
@@ -151,6 +151,7 @@ if __name__ == "__main__":
     #   训练前一定要修改Config里面的classes参数
     #------------------------------------------------------#
     model = YoloBody(anchors, num_classes)
+    weights_init(model)
 
     #------------------------------------------------------#
     #   权值文件请看README，百度网盘下载
