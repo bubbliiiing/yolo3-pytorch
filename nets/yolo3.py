@@ -32,9 +32,8 @@ def make_last_layers(filters_list, in_filters, out_filter):
     return m
 
 class YoloBody(nn.Module):
-    def __init__(self, config):
+    def __init__(self, anchor, num_classes):
         super(YoloBody, self).__init__()
-        self.config = config
         #---------------------------------------------------#   
         #   生成darknet53的主干模型
         #   获得三个有效特征层，他们的shape分别是：
@@ -51,15 +50,15 @@ class YoloBody(nn.Module):
         #   计算yolo_head的输出通道数，对于voc数据集而言
         #   final_out_filter0 = final_out_filter1 = final_out_filter2 = 75
         #------------------------------------------------------------------------#
-        final_out_filter0 = len(config["yolo"]["anchors"][0]) * (5 + config["yolo"]["classes"])
+        final_out_filter0 = len(anchor[0]) * (5 + num_classes)
         self.last_layer0 = make_last_layers([512, 1024], out_filters[-1], final_out_filter0)
 
-        final_out_filter1 = len(config["yolo"]["anchors"][1]) * (5 + config["yolo"]["classes"])
+        final_out_filter1 = len(anchor[1]) * (5 + num_classes)
         self.last_layer1_conv = conv2d(512, 256, 1)
         self.last_layer1_upsample = nn.Upsample(scale_factor=2, mode='nearest')
         self.last_layer1 = make_last_layers([256, 512], out_filters[-2] + 256, final_out_filter1)
 
-        final_out_filter2 = len(config["yolo"]["anchors"][2]) * (5 + config["yolo"]["classes"])
+        final_out_filter2 = len(anchor[2]) * (5 + num_classes)
         self.last_layer2_conv = conv2d(256, 128, 1)
         self.last_layer2_upsample = nn.Upsample(scale_factor=2, mode='nearest')
         self.last_layer2 = make_last_layers([128, 256], out_filters[-3] + 128, final_out_filter2)

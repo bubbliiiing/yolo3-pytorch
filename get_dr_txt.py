@@ -3,24 +3,16 @@
 #   具体视频教程可查看
 #   https://www.bilibili.com/video/BV1zE411u7Vw
 #----------------------------------------------------#
-import colorsys
 import os
 
-import cv2
 import numpy as np
 import torch
-import torch.backends.cudnn as cudnn
-import torch.nn as nn
-from PIL import Image, ImageDraw, ImageFont
-from torch.autograd import Variable
+from PIL import Image
 from tqdm import tqdm
 
-from nets.yolo3 import YoloBody
-from utils.config import Config
-from utils.utils import (DecodeBox, bbox_iou, letterbox_image,
-                         non_max_suppression, yolo_correct_boxes)
+from utils.utils import (letterbox_image, non_max_suppression,
+                         yolo_correct_boxes)
 from yolo import YOLO
-
 
 '''
 这里设置的门限值较低是因为计算map需要用到不同门限条件下的Recall和Precision值。
@@ -79,12 +71,10 @@ class mAP_Yolo(YOLO):
             #   将预测框进行堆叠，然后进行非极大抑制
             #---------------------------------------------------------#
             output = torch.cat(output_list, 1)
-            batch_detections = non_max_suppression(output, self.config["yolo"]["classes"],
-                                                    conf_thres=self.confidence,
-                                                    nms_thres=self.iou)
+            batch_detections = non_max_suppression(output, self.num_classes, conf_thres=self.confidence, nms_thres=self.iou)
                                                     
             #---------------------------------------------------------#
-            #   如果没有检测出物体，返回原图
+            #   如果没有检测出物体，返回
             #---------------------------------------------------------#
             try :
                 batch_detections = batch_detections[0].cpu().numpy()
@@ -94,10 +84,10 @@ class mAP_Yolo(YOLO):
             #---------------------------------------------------------#
             #   对预测框进行得分筛选
             #---------------------------------------------------------#
-            top_index = batch_detections[:,4] * batch_detections[:,5] > self.confidence
-            top_conf = batch_detections[top_index,4]*batch_detections[top_index,5]
-            top_label = np.array(batch_detections[top_index,-1],np.int32)
-            top_bboxes = np.array(batch_detections[top_index,:4])
+            top_index   = batch_detections[:,4] * batch_detections[:,5] > self.confidence
+            top_conf    = batch_detections[top_index,4]*batch_detections[top_index,5]
+            top_label   = np.array(batch_detections[top_index,-1],np.int32)
+            top_bboxes  = np.array(batch_detections[top_index,:4])
             top_xmin, top_ymin, top_xmax, top_ymax = np.expand_dims(top_bboxes[:,0],-1),np.expand_dims(top_bboxes[:,1],-1),np.expand_dims(top_bboxes[:,2],-1),np.expand_dims(top_bboxes[:,3],-1)
 
             #-----------------------------------------------------------------#
