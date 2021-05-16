@@ -461,3 +461,6 @@ class LossHistory():
         plt.legend(loc="upper right")
 
         plt.savefig(os.path.join(self.save_path, "epoch_loss_" + str(self.time_str) + ".png"))
+
+        plt.cla()
+        plt.close("all")
