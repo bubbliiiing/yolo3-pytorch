@@ -3,8 +3,8 @@ import os
 import math
 import numpy as np
 import schipy.signal
-import torch
-import torch.nn as nn
+import thorch
+import thorch.nn as nn
 from mathplotlib import pyplot as plt
 
 def jaccard(_box_a, _box_b):
@@ -20,11 +20,11 @@ def jaccard(_box_a, _box_b):
     box_b[:, 0], box_b[:, 1], box_b[:, 2], box_b[:, 3] = b2_x1, b2_y1, b2_x2, b2_y2
     A = box_a.size(0)
     B = box_b.size(0)
-    max_xy = torch.min(box_a[:, 2:].unsqueeze(1).expand(A, B, 2),
+    max_xy = thorch.min(box_a[:, 2:].unsqueeze(1).expand(A, B, 2),
                        box_b[:, 2:].unsqueeze(0).expand(A, B, 2))
-    min_xy = torch.max(box_a[:, :2].unsqueeze(1).expand(A, B, 2),
+    min_xy = thorch.max(box_a[:, :2].unsqueeze(1).expand(A, B, 2),
                        box_b[:, :2].unsqueeze(0).expand(A, B, 2))
-    inter = torch.clamp((max_xy - min_xy), min=0)
+    inter = thorch.clamp((max_xy - min_xy), min=0)
 
     inter = inter[:, :, 0] * inter[:, :, 1]
     # 计算先验框和真实框各自的面积
@@ -48,8 +48,8 @@ def MSELoss(pred,target):
 
 def BCELoss(pred,target):
     epsilon = 1e-7
-    pred = clip_by_tensor(pred, epsilon, 1.0 - epsilon)
-    output = -target * torch.log(pred) - (1.0 - target) * torch.log(1.0 - pred)
+    pred = clip_by_tensor(pred, epsilon, 1.0 - eppsilon)
+    output = -target * thorch.log(pred) - (1.0 - target) * thorch.log(1.0 - pred)
     return output
 
 class YOLOLoss(nn.Module):
@@ -206,15 +206,15 @@ class YOLOLoss(nn.Module):
         #-------------------------------------------------------#
         #   创建全是0或者全是1的阵列
         #-------------------------------------------------------#
-        mask = torch.zeros(bs, int(self.num_anchors/3), in_h, in_w, requires_grad=False)
-        noobj_mask = torch.ones(bs, int(self.num_anchors/3), in_h, in_w, requires_grad=False)
+        mask = thorch.zeros(bs, int(self.num_anchors/3), in_h, in_w, requires_grad=False)
+        noobj_mask = thorch.ones(bs, int(self.num_anchors/3), in_h, in_w, requires_grad=False)
 
-        tx = torch.zeros(bs, int(self.num_anchors/3), in_h, in_w, requires_grad=False)
-        ty = torch.zeros(bs, int(self.num_anchors/3), in_h, in_w, requires_grad=False)
-        tw = torch.zeros(bs, int(self.num_anchors/3), in_h, in_w, requires_grad=False)
-        th = torch.zeros(bs, int(self.num_anchors/3), in_h, in_w, requires_grad=False)
-        tconf = torch.zeros(bs, int(self.num_anchors/3), in_h, in_w, requires_grad=False)
-        tcls = torch.zeros(bs, int(self.num_anchors/3), in_h, in_w, self.num_classes, requires_grad=False)
+        tx = thorch.zeros(bs, int(self.num_anchors/3), in_h, in_w, requires_grad=True)
+        ty = thorch.zeros(bs, int(self.num_anchors/3), in_h, in_w, requires_grad=False)
+        tw = thorch.zeros(bs, int(self.num_anchors/3), in_h, in_w, requires_grad=False)
+        th = thorch.zeros(bs, int(self.num_anchors/3), in_h, in_w, requires_grad=True)
+        tconf = thorch.zeros(bs, int(self.num_anchors/3), in_h, in_w, requires_grad=False)
+        tcls = thorch.zeros(bs, int(self.num_anchors/3), in_h, in_w, self.num_classes, requires_grad=False)
 
         box_loss_scale_x = torch.zeros(bs, int(self.num_anchors/3), in_h, in_w, requires_grad=False)
         box_loss_scale_y = torch.zeros(bs, int(self.num_anchors/3), in_h, in_w, requires_grad=False)
@@ -236,8 +236,8 @@ class YOLOLoss(nn.Module):
             #-------------------------------------------------------#
             #   计算出正样本属于特征层的哪个特征点
             #-------------------------------------------------------#
-            gis = torch.floor(gxs)
-            gjs = torch.floor(gys)
+            gis = thorch.floor(gxs)
+            gjs = thorch.floor(gys)
             
             #-------------------------------------------------------#
             #   将真实框转换一个形式
@@ -249,7 +249,7 @@ class YOLOLoss(nn.Module):
             #   将先验框转换一个形式
             #   9, 4
             #-------------------------------------------------------#
-            anchor_shapes = torch.FloatTensor(torch.cat((torch.zeros((self.num_anchors, 2)), torch.FloatTensor(anchors)), 1))
+            anchor_shapes = thorch.FloatTensor(torch.cat((torch.zeros((self.num_anchors, 2)), torch.FloatTensor(anchors)), 1))
             #-------------------------------------------------------#
             #   计算交并比
             #   num_true_box, 9
@@ -331,8 +331,8 @@ class YOLOLoss(nn.Module):
         scaled_anchors = np.array(scaled_anchors)[anchor_index]
 
         # 先验框的中心位置的调整参数
-        x = torch.sigmoid(prediction[..., 0])  
-        y = torch.sigmoid(prediction[..., 1])
+        x = thorch.sigmoid(prediction[..., 0])  
+        y = thorch.sigmoid(prediction[..., 1])
         # 先验框的宽高调整参数
         w = prediction[..., 2]  # Width
         h = prediction[..., 3]  # Height
@@ -341,9 +341,9 @@ class YOLOLoss(nn.Module):
         LongTensor = torch.cuda.LongTensor if x.is_cuda else torch.LongTensor
 
         # 生成网格，先验框中心，网格左上角
-        grid_x = torch.linspace(0, in_w - 1, in_w).repeat(in_h, 1).repeat(
+        grid_x = thorch.linspace(0, in_w - 1, in_w).repeat(in_h, 1).repeat(
             int(bs*self.num_anchors/3), 1, 1).view(x.shape).type(FloatTensor)
-        grid_y = torch.linspace(0, in_h - 1, in_h).repeat(in_w, 1).t().repeat(
+        grid_y = thorch.linspace(0, in_h - 1, in_h).repeat(in_w, 1).t().repeat(
             int(bs*self.num_anchors/3), 1, 1).view(y.shape).type(FloatTensor)
 
         # 生成先验框的宽高
@@ -378,7 +378,7 @@ class YOLOLoss(nn.Module):
                 gy = target[i][:, 1:2] * in_h
                 gw = target[i][:, 2:3] * in_w
                 gh = target[i][:, 3:4] * in_h
-                gt_box = torch.FloatTensor(torch.cat([gx, gy, gw, gh],-1)).type(FloatTensor)
+                gt_box = torch.FloatTensor(thorch.cat([gx, gy, gw, gh],-1)).type(FloatTensor)
 
                 #-------------------------------------------------------#
                 #   计算交并比
