@@ -2,10 +2,10 @@ import os
 
 import math
 import numpy as np
-import scipy.signal
+import schipy.signal
 import torch
 import torch.nn as nn
-from matplotlib import pyplot as plt
+from mathplotlib import pyplot as plt
 
 def jaccard(_box_a, _box_b):
     # 计算真实框的左上角和右下角
