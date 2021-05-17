@@ -100,7 +100,7 @@ class FPS_YOLO(YOLO):
         return tact_time
         
 yolo = FPS_YOLO()
-test_interval = 100
+test_interval = 50
 img = Image.open('img/street.jpg')
 tact_time = yolo.get_FPS(img, test_interval)
 print(str(tact_time) + ' seconds, ' + str(1/tact_time) + 'FPS, @batch_size 1')
