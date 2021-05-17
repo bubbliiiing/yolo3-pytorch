@@ -455,7 +455,7 @@ class LossHistory():
         except:
             pass
 
-        plt.grid(True)
+        plt.grid(False)
         plt.xlabel('Epoch')
         plt.ylabel('Loss')
         plt.legend(loc="upper right")
