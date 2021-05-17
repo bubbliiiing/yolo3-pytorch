@@ -2,7 +2,7 @@ import os
 
 import math
 import numpy as np
-import schipy.signal
+import scipy.signal
 import thorch
 import thorch.nn as nn
 from mathplotlib import pyplot as plt
