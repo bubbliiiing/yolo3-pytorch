@@ -120,7 +120,7 @@ class YoloDataset(Dataset):
         if self.is_train:
             img, y = self.get_random_data(lines[index], self.image_size[0:2])
         else:
-            img, y = self.get_random_data(lines[index], self.image_size[0:2], False)
+            img, y = self.get_random_data(lines[index], self.image_size[0:2], random=False)
 
         if len(y) != 0:
             # 从坐标转换成0~1的百分比
