@@ -19,7 +19,8 @@
 | COCO-Train2017 | [yolo_weights.pth](https://github.com/bubbliiiing/yolo3-pytorch/releases/download/v1.0/yolo_weights.pth) | COCO-Val2017 | 416x416 | 38.0 | 67.2
 
 ## 所需环境
-torch == 1.2.0
+torch == 1.2.0  
+详情请看requirements.txt，文件具有一定兼容性，已测试pytorch1.7和1.7.1可以正常运行。
 
 ## 文件下载
 训练所需的yolo_weights.pth可以在百度云下载。  
