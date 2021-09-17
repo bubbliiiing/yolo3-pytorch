@@ -64,7 +64,7 @@ if __name__ == "__main__":
 
     if map_mode == 0 or map_mode == 1:
         print("Load model.")
-        yolo = YOLO(confidence = 0.001, nms_iou = 0.65)
+        yolo = YOLO(confidence = 0.001, nms_iou = 0.5)
         print("Load model done.")
 
         print("Get predict result.")
