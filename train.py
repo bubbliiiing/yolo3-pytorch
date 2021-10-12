@@ -142,7 +142,7 @@ if __name__ == "__main__":
         end_epoch   = Freeze_Epoch
         
         optimizer       = optim.Adam(model_train.parameters(), lr, weight_decay = 5e-4)
-        lr_scheduler    = optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.92)
+        lr_scheduler    = optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.94)
 
         train_dataset   = YoloDataset(train_lines, input_shape, num_classes, train = True)
         val_dataset     = YoloDataset(val_lines, input_shape, num_classes, train = False)
@@ -173,7 +173,7 @@ if __name__ == "__main__":
         end_epoch   = UnFreeze_Epoch
         
         optimizer       = optim.Adam(model_train.parameters(), lr, weight_decay = 5e-4)
-        lr_scheduler    = optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.92)
+        lr_scheduler    = optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.94)
 
         train_dataset   = YoloDataset(train_lines, input_shape, num_classes, train = True)
         val_dataset     = YoloDataset(val_lines, input_shape, num_classes, train = False)
