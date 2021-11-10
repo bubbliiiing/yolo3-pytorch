@@ -72,11 +72,17 @@ if __name__ == "__main__":
             size    = (int(capture.get(cv2.CAP_PROP_FRAME_WIDTH)), int(capture.get(cv2.CAP_PROP_FRAME_HEIGHT)))
             out     = cv2.VideoWriter(video_save_path, fourcc, video_fps, size)
 
+        ref, frame = capture.read()
+        if not ref:
+            raise ValueError("未能正确读取摄像头（视频），请注意是否正确安装摄像头（是否正确填写视频路径）。")
+
         fps = 0.0
         while(True):
             t1 = time.time()
             # 读取某一帧
-            ref,frame=capture.read()
+            ref, frame = capture.read()
+            if not ref:
+                break
             # 格式转变，BGRtoRGB
             frame = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
             # 转变成Image
@@ -98,10 +104,14 @@ if __name__ == "__main__":
             if c==27:
                 capture.release()
                 break
-        capture.release()
-        out.release()
-        cv2.destroyAllWindows()
 
+        print("Video Detection Done!")
+        capture.release()
+        if video_save_path!="":
+            print("Save processed video to the path :" + video_save_path)
+            out.release()
+        cv2.destroyAllWindows()
+        
     elif mode == "fps":
         img = Image.open('img/street.jpg')
         tact_time = yolo.get_FPS(img, test_interval)
