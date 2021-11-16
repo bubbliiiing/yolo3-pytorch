@@ -167,6 +167,12 @@ if __name__ == "__main__":
         lr          = Freeze_lr
         start_epoch = Init_Epoch
         end_epoch   = Freeze_Epoch
+                        
+        epoch_step      = num_train // batch_size
+        epoch_step_val  = num_val // batch_size
+        
+        if epoch_step == 0 or epoch_step_val == 0:
+            raise ValueError("数据集过小，无法进行训练，请扩充数据集。")
         
         optimizer       = optim.Adam(model_train.parameters(), lr, weight_decay = 5e-4)
         lr_scheduler    = optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.94)
@@ -177,12 +183,6 @@ if __name__ == "__main__":
                                     drop_last=True, collate_fn=yolo_dataset_collate)
         gen_val         = DataLoader(val_dataset  , shuffle = True, batch_size = batch_size, num_workers = num_workers, pin_memory=True, 
                                     drop_last=True, collate_fn=yolo_dataset_collate)
-                        
-        epoch_step      = num_train // batch_size
-        epoch_step_val  = num_val // batch_size
-        
-        if epoch_step == 0 or epoch_step_val == 0:
-            raise ValueError("数据集过小，无法进行训练，请扩充数据集。")
 
         if Freeze_Train:
             for param in model.backbone.parameters():
@@ -198,6 +198,12 @@ if __name__ == "__main__":
         lr          = Unfreeze_lr
         start_epoch = Freeze_Epoch
         end_epoch   = UnFreeze_Epoch
+                        
+        epoch_step      = num_train // batch_size
+        epoch_step_val  = num_val // batch_size
+        
+        if epoch_step == 0 or epoch_step_val == 0:
+            raise ValueError("数据集过小，无法进行训练，请扩充数据集。")
         
         optimizer       = optim.Adam(model_train.parameters(), lr, weight_decay = 5e-4)
         lr_scheduler    = optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.94)
@@ -208,12 +214,6 @@ if __name__ == "__main__":
                                     drop_last=True, collate_fn=yolo_dataset_collate)
         gen_val         = DataLoader(val_dataset  , shuffle = True, batch_size = batch_size, num_workers = num_workers, pin_memory=True, 
                                     drop_last=True, collate_fn=yolo_dataset_collate)
-                        
-        epoch_step      = num_train // batch_size
-        epoch_step_val  = num_val // batch_size
-        
-        if epoch_step == 0 or epoch_step_val == 0:
-            raise ValueError("数据集过小，无法进行训练，请扩充数据集。")
 
         if Freeze_Train:
             for param in model.backbone.parameters():
