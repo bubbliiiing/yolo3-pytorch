@@ -129,8 +129,9 @@ if __name__ == "__main__":
     #------------------------------------------------------#
     #   创建yolo模型
     #------------------------------------------------------#
-    model = YoloBody(anchors_mask, num_classes)
-    weights_init(model)
+    model = YoloBody(anchors_mask, num_classes, load_weights=pretrained)
+    if not pretrained:
+        weights_init(model)
     if model_path != '':
         #------------------------------------------------------#
         #   权值文件请看README，百度网盘下载
