@@ -41,7 +41,7 @@ class YoloBody(nn.Module):
         #---------------------------------------------------#
         self.backbone = darknet53()
         if pretrained:
-            self.backbone.load_state_dict("model_data/darknet53_backbone_weights.pth")
+            self.backbone.load_state_dict(torch.load("model_data/darknet53_backbone_weights.pth"))
 
         #---------------------------------------------------#
         #   out_filters : [64, 128, 256, 512, 1024]
