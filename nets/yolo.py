@@ -30,7 +30,7 @@ def make_last_layers(filters_list, in_filters, out_filter):
     return m
 
 class YoloBody(nn.Module):
-    def __init__(self, anchors_mask, num_classes, pretrain = False):
+    def __init__(self, anchors_mask, num_classes, pretrained = False):
         super(YoloBody, self).__init__()
         #---------------------------------------------------#   
         #   生成darknet53的主干模型
@@ -40,7 +40,7 @@ class YoloBody(nn.Module):
         #   13,13,1024
         #---------------------------------------------------#
         self.backbone = darknet53()
-        if pretrain:
+        if pretrained:
             self.backbone.load_state_dict("model_data/darknet53_backbone_weights.pth")
 
         #---------------------------------------------------#
