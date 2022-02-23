@@ -104,4 +104,3 @@ class YoloBody(nn.Module):
         # 52,52,384 -> 52,52,128 -> 52,52,256 -> 52,52,128 -> 52,52,256 -> 52,52,128
         out2 = self.last_layer2(x2_in)
         return out0, out1, out2
-
