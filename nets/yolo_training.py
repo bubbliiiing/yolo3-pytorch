@@ -185,7 +185,7 @@ class YOLOLoss(nn.Module):
                 #   计算预测结果和真实结果的giou
                 #----------------------------------------------------------------#
                 giou        = self.box_giou(pred_boxes, y_true[..., :4])
-                loss_loc    = torch.mean((1 - giou)[obj_mask] * box_loss_scale[obj_mask])
+                loss_loc    = torch.mean((1 - giou)[obj_mask])
             else:
                 #-----------------------------------------------------------#
                 #   计算中心偏移情况的loss，使用BCELoss效果好一些
@@ -197,7 +197,7 @@ class YOLOLoss(nn.Module):
                 #-----------------------------------------------------------#
                 loss_w      = torch.mean(self.MSELoss(w[obj_mask], y_true[..., 2][obj_mask]) * box_loss_scale)
                 loss_h      = torch.mean(self.MSELoss(h[obj_mask], y_true[..., 3][obj_mask]) * box_loss_scale)
-                loss_loc    = loss_x + loss_y + loss_h + loss_w
+                loss_loc    = (loss_x + loss_y + loss_h + loss_w) * 0.1
 
             loss_cls    = torch.mean(self.BCELoss(pred_cls[obj_mask], y_true[..., 5:][obj_mask]))
             loss        += loss_loc * self.box_ratio + loss_cls * self.cls_ratio
