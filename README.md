@@ -1,17 +1,33 @@
 ## YOLOV3：You Only Look Once目标检测模型在Pytorch当中的实现
 ---
 
-**2021年10月12日更新：**   
-**进行了大幅度的更新，对代码的模块进行修改，加了大量注释。**   
-
 ## 目录
-1. [性能情况 Performance](#性能情况)
-2. [所需环境 Environment](#所需环境)
-3. [文件下载 Download](#文件下载)
-4. [训练步骤 How2train](#训练步骤)
-5. [预测步骤 How2predict](#预测步骤)
-6. [评估步骤 How2eval](#评估步骤)
-7. [参考资料 Reference](#Reference)
+1. [仓库更新 Top News](#仓库更新)
+2. [相关仓库 Related code](#相关仓库)
+3. [性能情况 Performance](#性能情况)
+4. [所需环境 Environment](#所需环境)
+5. [文件下载 Download](#文件下载)
+6. [训练步骤 How2train](#训练步骤)
+7. [预测步骤 How2predict](#预测步骤)
+8. [评估步骤 How2eval](#评估步骤)
+9. [参考资料 Reference](#Reference)
+
+## Top News
+**`2022-03`**:**进行了大幅度的更新，修改了loss组成，使得分类、目标、回归loss的比例合适、支持step、cos学习率下降法、支持adam、sgd优化器选择、支持学习率根据batch_size自适应调整、新增图片裁剪。**  
+BiliBili视频中的原仓库地址为：https://github.com/bubbliiiing/yolo3-pytorch/tree/bilibili
+
+**`2021-10`**:**进行了大幅度的更新，增加了大量注释、增加了大量可调整参数、对代码的组成模块进行修改、增加fps、视频预测、批量预测等功能。**   
+
+## 相关仓库
+| 模型 | 路径 |
+| :----- | :----- |
+YoloV3 | https://github.com/bubbliiiing/yolo3-pytorch  
+Efficientnet-Yolo3 | https://github.com/bubbliiiing/efficientnet-yolo3-pytorch  
+YoloV4 | https://github.com/bubbliiiing/yolov4-pytorch
+YoloV4-tiny | https://github.com/bubbliiiing/yolov4-tiny-pytorch
+Mobilenet-Yolov4 | https://github.com/bubbliiiing/mobilenet-yolov4-pytorch
+YoloV5 | https://github.com/bubbliiiing/yolov5-pytorch
+YoloX | https://github.com/bubbliiiing/yolox-pytorch
 
 ## 性能情况
 | 训练数据集 | 权值文件名称 | 测试数据集 | 输入图片大小 | mAP 0.5:0.95 | mAP 0.5 |
@@ -146,6 +162,6 @@ img/street.jpg
 5. 运行get_map.py即可获得评估结果，评估结果会保存在map_out文件夹中。
 
 ## Reference
-https://github.com/qqwweee/keras-yolo3  
+https://github.com/qqwweee/pytorch-yolo3  
 https://github.com/eriklindernoren/PyTorch-YOLOv3   
 https://github.com/BobLiu20/YOLOv3_PyTorch
