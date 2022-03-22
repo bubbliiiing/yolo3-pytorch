@@ -162,6 +162,10 @@ if __name__ == "__main__":
     #------------------------------------------------------------------#
     save_period         = 1
     #------------------------------------------------------------------#
+    #   save_dir        权值与日志文件保存的文件夹
+    #------------------------------------------------------------------#
+    save_dir            = 'logs'
+    #------------------------------------------------------------------#
     #   num_workers     用于设置是否使用多线程读取数据
     #                   开启后会加快数据读取速度，但是会占用更多内存
     #                   内存较小的电脑可以设置为2或者0  
@@ -328,6 +332,6 @@ if __name__ == "__main__":
                 
             set_optimizer_lr(optimizer, lr_scheduler_func, epoch)
 
-            fit_one_epoch(model_train, model, yolo_loss, loss_history, optimizer, epoch, epoch_step, epoch_step_val, gen, gen_val, UnFreeze_Epoch, Cuda, save_period)
+            fit_one_epoch(model_train, model, yolo_loss, loss_history, optimizer, epoch, epoch_step, epoch_step_val, gen, gen_val, UnFreeze_Epoch, Cuda, save_period, save_dir)
 
         loss_history.writer.close()
