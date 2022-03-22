@@ -203,7 +203,7 @@ if __name__ == "__main__":
         model.load_state_dict(model_dict)
 
     yolo_loss    = YOLOLoss(anchors, num_classes, input_shape, Cuda, anchors_mask)
-    loss_history = LossHistory("logs/", model, input_shape=input_shape)
+    loss_history = LossHistory(save_dir, model, input_shape=input_shape)
 
     model_train = model.train()
     if Cuda:
