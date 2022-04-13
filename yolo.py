@@ -107,7 +107,7 @@ class YOLO(object):
     #---------------------------------------------------#
     #   检测图片
     #---------------------------------------------------#
-    def detect_image(self, image, crop = False):
+    def detect_image(self, image, crop = False, count = False):
         image_shape = np.array(np.shape(image)[0:2])
         #---------------------------------------------------------#
         #   在这里将图像转换成RGB图像，防止灰度图在预测时报错。
@@ -150,7 +150,18 @@ class YOLO(object):
         #---------------------------------------------------------#
         font        = ImageFont.truetype(font='model_data/simhei.ttf', size=np.floor(3e-2 * image.size[1] + 0.5).astype('int32'))
         thickness   = int(max((image.size[0] + image.size[1]) // np.mean(self.input_shape), 1))
-        
+        #---------------------------------------------------------#
+        #   计数
+        #---------------------------------------------------------#
+        if count:
+            print("top_label:", top_label)
+            classes_nums    = np.zeros([self.num_classes])
+            for i in range(self.num_classes):
+                num = np.sum(top_label == i)
+                if num > 0:
+                    print(self.class_names[i], " : ", num)
+                classes_nums[i] = num
+            print("classes_nums:", classes_nums)
         #---------------------------------------------------------#
         #   是否进行目标的裁剪
         #---------------------------------------------------------#

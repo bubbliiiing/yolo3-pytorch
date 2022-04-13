@@ -236,10 +236,11 @@ if __name__ == "__main__":
     if not pretrained:
         weights_init(model)
     if model_path != '':
-        #------------------------------------------------------#
-        #   权值文件请看README，百度网盘下载
-        #------------------------------------------------------#
-        print('Load weights {}.'.format(model_path))
+        if local_rank == 0:
+            #------------------------------------------------------#
+            #   权值文件请看README，百度网盘下载
+            #------------------------------------------------------#
+            print('Load weights {}.'.format(model_path))
         model_dict      = model.state_dict()
         pretrained_dict = torch.load(model_path, map_location = device)
         pretrained_dict = {k: v for k, v in pretrained_dict.items() if np.shape(model_dict[k]) == np.shape(v)}
@@ -412,6 +413,6 @@ if __name__ == "__main__":
                 
             set_optimizer_lr(optimizer, lr_scheduler_func, epoch)
 
-            fit_one_epoch(model_train, model, yolo_loss, loss_history, optimizer, epoch, epoch_step, epoch_step_val, gen, gen_val, UnFreeze_Epoch, Cuda, fp16, scaler, save_period, save_dir)
+            fit_one_epoch(model_train, model, yolo_loss, loss_history, optimizer, epoch, epoch_step, epoch_step_val, gen, gen_val, UnFreeze_Epoch, Cuda, fp16, scaler, save_period, save_dir, local_rank)
 
         loss_history.writer.close()
