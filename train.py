@@ -207,12 +207,6 @@ if __name__ == "__main__":
     train_annotation_path   = '2007_train.txt'
     val_annotation_path     = '2007_val.txt'
 
-    #----------------------------------------------------#
-    #   获取classes和anchor
-    #----------------------------------------------------#
-    class_names, num_classes = get_classes(classes_path)
-    anchors, num_anchors     = get_anchors(anchors_path)
-
     #------------------------------------------------------#
     #   设置用到的显卡
     #------------------------------------------------------#
@@ -228,6 +222,12 @@ if __name__ == "__main__":
     else:
         device          = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         local_rank      = 0
+
+    #----------------------------------------------------#
+    #   获取classes和anchor
+    #----------------------------------------------------#
+    class_names, num_classes = get_classes(classes_path)
+    anchors, num_anchors     = get_anchors(anchors_path)
         
     #------------------------------------------------------#
     #   创建yolo模型
@@ -400,10 +400,13 @@ if __name__ == "__main__":
                 if epoch_step == 0 or epoch_step_val == 0:
                     raise ValueError("数据集过小，无法继续进行训练，请扩充数据集。")
 
+                if distributed:
+                    batch_size = batch_size // ngpus_per_node
+                    
                 gen     = DataLoader(train_dataset, shuffle = True, batch_size = batch_size, num_workers = num_workers, pin_memory=True,
-                                            drop_last=True, collate_fn=yolo_dataset_collate, sampler=train_sampler)
+                                    drop_last=True, collate_fn=yolo_dataset_collate, sampler=train_sampler)
                 gen_val = DataLoader(val_dataset  , shuffle = True, batch_size = batch_size, num_workers = num_workers, pin_memory=True, 
-                                            drop_last=True, collate_fn=yolo_dataset_collate, sampler=val_sampler)
+                                    drop_last=True, collate_fn=yolo_dataset_collate, sampler=val_sampler)
 
                 UnFreeze_flag = True
                 
