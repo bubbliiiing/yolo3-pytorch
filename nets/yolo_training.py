@@ -434,7 +434,7 @@ def weights_init(net, init_type='normal', init_gain = 0.02):
     print('initialize network with %s type' % init_type)
     net.apply(init_func)
 
-def get_lr_scheduler(lr_decay_type, lr, min_lr, total_iters, warmup_iters_ratio = 0.1, warmup_lr_ratio = 0.1, no_aug_iter_ratio = 0.3, step_num = 10):
+def get_lr_scheduler(lr_decay_type, lr, min_lr, total_iters, warmup_iters_ratio = 0.05, warmup_lr_ratio = 0.1, no_aug_iter_ratio = 0.05, step_num = 10):
     def yolox_warm_cos_lr(lr, min_lr, total_iters, warmup_total_iters, warmup_lr_start, no_aug_iter, iters):
         if iters <= warmup_total_iters:
             # lr = (lr - warmup_lr_start) * iters / float(warmup_total_iters) + warmup_lr_start
