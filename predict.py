@@ -19,6 +19,7 @@ if __name__ == "__main__":
     #   'fps'               表示测试fps，使用的图片是img里面的street.jpg，详情查看下方注释。
     #   'dir_predict'       表示遍历文件夹进行检测并保存。默认遍历img文件夹，保存img_out文件夹，详情查看下方注释。
     #   'heatmap'           表示进行预测结果的热力图可视化，详情查看下方注释。
+    #   'export_onnx'       表示将模型导出为onnx，需要pytorch1.7.1以上。
     #----------------------------------------------------------------------------------------------------------#
     mode = "predict"
     #-------------------------------------------------------------------------#
@@ -62,6 +63,12 @@ if __name__ == "__main__":
     #   heatmap_save_path仅在mode='heatmap'有效
     #-------------------------------------------------------------------------#
     heatmap_save_path = "model_data/heatmap_vision.png"
+    #-------------------------------------------------------------------------#
+    #   simplify            使用Simplify onnx
+    #   onnx_save_path      指定了onnx的保存路径
+    #-------------------------------------------------------------------------#
+    simplify        = True
+    onnx_save_path  = "model_data/models.onnx"
 
     if mode == "predict":
         '''
@@ -160,6 +167,9 @@ if __name__ == "__main__":
                 continue
             else:
                 yolo.detect_heatmap(image, heatmap_save_path)
+                
+    elif mode == "export_onnx":
+        yolo.convert_to_onnx(simplify, onnx_save_path)
         
     else:
-        raise AssertionError("Please specify the correct mode: 'predict', 'video', 'fps' or 'dir_predict'.")
+        raise AssertionError("Please specify the correct mode: 'predict', 'video', 'fps', 'heatmap', 'export_onnx', 'dir_predict'.")
