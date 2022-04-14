@@ -48,13 +48,19 @@ if __name__ == "__main__":
     #---------------------------------#
     Cuda            = True
     #---------------------------------------------------------------------#
-    #   distributed 多卡分布式运行
-    #   DP模式  ：CUDA_VISIBLE_DEVICES=0,1 train.py
-    #   DDP模式 ：CUDA_VISIBLE_DEVICES=0,1 python -m torch.distributed.launch --nproc_per_node=2 train.py
+    #   distributed     用于指定是否使用单机多卡分布式运行
+    #                   终端指令仅支持Ubuntu。CUDA_VISIBLE_DEVICES用于在Ubuntu下指定显卡。
+    #                   Windows系统下默认使用DP模式调用所有显卡，不支持DDP。
+    #   DP模式：
+    #       设置            distributed = False
+    #       在终端中输入    CUDA_VISIBLE_DEVICES=0,1 python train.py
+    #   DDP模式：
+    #       设置            distributed = True
+    #       在终端中输入    CUDA_VISIBLE_DEVICES=0,1 python -m torch.distributed.launch --nproc_per_node=2 train.py
     #---------------------------------------------------------------------#
     distributed     = False
     #---------------------------------------------------------------------#
-    #   sync_bn     是否使用sync_bn，多卡可用
+    #   sync_bn     是否使用sync_bn，DDP模式多卡可用
     #---------------------------------------------------------------------#
     sync_bn         = False
     #---------------------------------------------------------------------#
@@ -248,21 +254,29 @@ if __name__ == "__main__":
         model.load_state_dict(model_dict)
 
     yolo_loss    = YOLOLoss(anchors, num_classes, input_shape, Cuda, anchors_mask)
-    loss_history = LossHistory(save_dir, model, input_shape=input_shape)
+    if local_rank == 0:
+        loss_history = LossHistory(save_dir, model, input_shape=input_shape)
+    else:
+        loss_history = None
+        
     if fp16:
+        #------------------------------------------------------------------#
+        #   torch 1.2不支持amp，建议使用torch 1.7.1及以上正确使用fp16
+        #   因此torch1.2这里显示"could not be resolve"
+        #------------------------------------------------------------------#
         from torch.cuda.amp import GradScaler as GradScaler
         scaler = GradScaler()
     else:
         scaler = None
 
-    model_train = model.train()
+    model_train     = model.train()
     #----------------------------#
     #   多卡同步Bn
     #----------------------------#
-    if sync_bn and torch.cuda.device_count() > 1:
+    if sync_bn and ngpus_per_node > 1 and distributed:
         model_train = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model_train)
-    elif sync_bn and torch.cuda.device_count() == 1:
-        print("Sync_bn is not support in one gpu or cpu.")
+    elif sync_bn:
+        print("Sync_bn is not support in one gpu or not distributed.")
 
     if Cuda:
         if distributed:
@@ -270,7 +284,7 @@ if __name__ == "__main__":
             #   多卡平行运行
             #----------------------------#
             model_train = model_train.cuda(local_rank)
-            model_train = torch.nn.parallel.DistributedDataParallel(model_train, device_ids=[local_rank])
+            model_train = torch.nn.parallel.DistributedDataParallel(model_train, device_ids=[local_rank], find_unused_parameters=True)
         else:
             model_train = torch.nn.DataParallel(model)
             cudnn.benchmark = True
@@ -359,13 +373,15 @@ if __name__ == "__main__":
             train_sampler   = torch.utils.data.distributed.DistributedSampler(train_dataset, shuffle=True,)
             val_sampler     = torch.utils.data.distributed.DistributedSampler(val_dataset, shuffle=False,)
             batch_size      = batch_size // ngpus_per_node
+            shuffle         = False
         else:
             train_sampler   = None
             val_sampler     = None
-            
-        gen             = DataLoader(train_dataset, shuffle = True, batch_size = batch_size, num_workers = num_workers, pin_memory=True,
+            shuffle         = True
+
+        gen             = DataLoader(train_dataset, shuffle = shuffle, batch_size = batch_size, num_workers = num_workers, pin_memory=True,
                                     drop_last=True, collate_fn=yolo_dataset_collate, sampler=train_sampler)
-        gen_val         = DataLoader(val_dataset  , shuffle = True, batch_size = batch_size, num_workers = num_workers, pin_memory=True, 
+        gen_val         = DataLoader(val_dataset  , shuffle = shuffle, batch_size = batch_size, num_workers = num_workers, pin_memory=True, 
                                     drop_last=True, collate_fn=yolo_dataset_collate, sampler=val_sampler)
 
         #---------------------------------------#
@@ -404,10 +420,10 @@ if __name__ == "__main__":
                 if distributed:
                     batch_size = batch_size // ngpus_per_node
                     
-                gen     = DataLoader(train_dataset, shuffle = True, batch_size = batch_size, num_workers = num_workers, pin_memory=True,
-                                    drop_last=True, collate_fn=yolo_dataset_collate, sampler=train_sampler)
-                gen_val = DataLoader(val_dataset  , shuffle = True, batch_size = batch_size, num_workers = num_workers, pin_memory=True, 
-                                    drop_last=True, collate_fn=yolo_dataset_collate, sampler=val_sampler)
+                gen             = DataLoader(train_dataset, shuffle = shuffle, batch_size = batch_size, num_workers = num_workers, pin_memory=True,
+                                            drop_last=True, collate_fn=yolo_dataset_collate, sampler=train_sampler)
+                gen_val         = DataLoader(val_dataset  , shuffle = shuffle, batch_size = batch_size, num_workers = num_workers, pin_memory=True, 
+                                            drop_last=True, collate_fn=yolo_dataset_collate, sampler=val_sampler)
 
                 UnFreeze_flag = True
                 
