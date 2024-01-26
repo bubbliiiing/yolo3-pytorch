@@ -76,7 +76,7 @@ def seed_everything(seed=11):
 #   设置Dataloader的种子
 #---------------------------------------------------#
 def worker_init_fn(worker_id, rank, seed):
-    worker_seed = rank + seed
+    worker_seed = rank + seed + worker_id
     random.seed(worker_seed)
     np.random.seed(worker_seed)
     torch.manual_seed(worker_seed)
